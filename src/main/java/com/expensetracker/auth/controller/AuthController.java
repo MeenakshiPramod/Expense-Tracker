@@ -9,7 +9,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/auth")
@@ -17,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
@@ -32,7 +37,7 @@ public class AuthController {
         User user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
-                .password(request.getPassword()) // ⚠️ plain for now
+                .password(passwordEncoder.encode(request.getPassword()))
                 .role(UserRole.USER)
                 .enabled(true)
                 .build();
@@ -49,8 +54,10 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
 
         return userService.findByEmail(request.getEmail())
-                .filter(user -> user.getPassword().equals(request.getPassword()))
-                .map(user -> ResponseEntity.ok("Login successful"))
+                .filter(user -> passwordEncoder.matches(
+                        request.getPassword(), user.getPassword()
+                        ))
+                        .map(user -> ResponseEntity.ok("Login successful"))
                 .orElseGet(() ->
                         ResponseEntity
                                 .status(HttpStatus.UNAUTHORIZED)
