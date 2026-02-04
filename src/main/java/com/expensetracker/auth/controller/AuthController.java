@@ -1,7 +1,9 @@
 package com.expensetracker.auth.controller;
 
+import com.expensetracker.auth.dto.AuthResponse;
 import com.expensetracker.auth.dto.LoginRequest;
 import com.expensetracker.auth.dto.RegisterRequest;
+import com.expensetracker.auth.util.JwtUtil;
 import com.expensetracker.user.entity.User;
 import com.expensetracker.user.entity.UserRole;
 import com.expensetracker.user.service.UserService;
@@ -22,6 +24,7 @@ public class AuthController {
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
@@ -53,15 +56,42 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
 
+        System.out.println("🔥 LOGIN CONTROLLER HIT 🔥");
+
         return userService.findByEmail(request.getEmail())
-                .filter(user -> passwordEncoder.matches(
-                        request.getPassword(), user.getPassword()
-                        ))
-                        .map(user -> ResponseEntity.ok("Login successful"))
-                .orElseGet(() ->
+                .map(user -> {
+                    System.out.println("➡ DB PASSWORD: " + user.getPassword());
+                    System.out.println("➡ RAW PASSWORD: " + request.getPassword());
+
+                    boolean match = passwordEncoder.matches(
+                            request.getPassword(),
+                            user.getPassword()
+                    );
+
+                    System.out.println("➡ PASSWORD MATCH RESULT: " + match);
+
+                    if (!match) {
+                        return ResponseEntity
+                                .status(HttpStatus.UNAUTHORIZED)
+                                .body("Invalid email or password");
+                    }
+
+                    String token = jwtUtil.generateToken(
+                            user.getId(),
+                            user.getEmail(),
+                            user.getRole().name()
+                    );
+
+                    return ResponseEntity.ok(new AuthResponse(token));
+                })
+                .orElse(
                         ResponseEntity
                                 .status(HttpStatus.UNAUTHORIZED)
                                 .body("Invalid email or password")
                 );
     }
+
+
+
+
 }
