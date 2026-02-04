@@ -1,5 +1,6 @@
 package com.expensetracker.auth.util;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -12,7 +13,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // ✅ Base64-encoded secret (VERY IMPORTANT)
+    // Base64-encoded secret (VERY IMPORTANT)
     private static final String SECRET_KEY =
             Base64.getEncoder().encodeToString(
                     "expense-tracker-secret-key-very-secure".getBytes()
@@ -34,5 +35,14 @@ public class JwtUtil {
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public Claims validateToken(String token) {
+
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }
