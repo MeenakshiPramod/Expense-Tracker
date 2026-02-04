@@ -2,6 +2,7 @@ package com.expensetracker.expense.controller;
 
 import com.expensetracker.common.util.SecurityUtil;
 import com.expensetracker.expense.dto.CreateExpenseRequest;
+import com.expensetracker.expense.dto.ExpenseResponse;
 import com.expensetracker.expense.entity.Expense;
 import com.expensetracker.expense.service.ExpenseService;
 import com.expensetracker.user.entity.User;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/expenses")
@@ -46,4 +49,32 @@ public class ExpenseController {
                 .status(HttpStatus.CREATED)
                 .body("Expense added successfully");
     }
+
+    @GetMapping
+    public ResponseEntity<?> getMyExpenses() {
+
+        // 1️⃣ Get logged-in user email
+        String email = SecurityUtil.getCurrentUserEmail();
+
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2️⃣ Fetch user-specific expenses
+        List<Expense> expenses = expenseService.getExpensesByUser(user);
+
+        // 3️⃣ Map Entity → Response DTO
+        List<ExpenseResponse> response = expenses.stream()
+                .map(expense -> ExpenseResponse.builder()
+                        .id(expense.getId())
+                        .amount(expense.getAmount())
+                        .description(expense.getDescription())
+                        .category(expense.getCategory())
+                        .expenseDate(expense.getExpenseDate())
+                        .build()
+                )
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
 }
