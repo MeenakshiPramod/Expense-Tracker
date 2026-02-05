@@ -3,6 +3,7 @@ package com.expensetracker.expense.controller;
 import com.expensetracker.common.util.SecurityUtil;
 import com.expensetracker.expense.dto.CreateExpenseRequest;
 import com.expensetracker.expense.dto.ExpenseResponse;
+import com.expensetracker.expense.dto.UpdateExpenseRequest;
 import com.expensetracker.expense.entity.Expense;
 import com.expensetracker.expense.service.ExpenseService;
 import com.expensetracker.user.entity.User;
@@ -81,16 +82,34 @@ public class ExpenseController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteExpense(@PathVariable Long id) {
 
-        // 1️⃣ Get logged-in user
+        //Get logged-in user
         String email = SecurityUtil.getCurrentUserEmail();
 
         User user = userService.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 2️⃣ Delete expense with ownership check
+        //Delete expense with ownership check
         expenseService.deleteExpense(id, user);
 
         return ResponseEntity.ok("Expense deleted successfully");
+    }
+
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateExpense(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateExpenseRequest request
+    ) {
+        //Get logged-in user
+        String email = SecurityUtil.getCurrentUserEmail();
+
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        //Update expense with ownership check
+        expenseService.updateExpense(id, user, request);
+
+        return ResponseEntity.ok("Expense updated successfully");
     }
 
 }

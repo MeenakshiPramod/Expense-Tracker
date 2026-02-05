@@ -1,5 +1,6 @@
 package com.expensetracker.expense.service;
 
+import com.expensetracker.expense.dto.UpdateExpenseRequest;
 import com.expensetracker.expense.entity.Expense;
 import com.expensetracker.expense.repository.ExpenseRepository;
 import com.expensetracker.user.entity.User;
@@ -34,5 +35,22 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         expenseRepository.delete(expense);
     }
+
+    @Override
+    public void updateExpense(Long expenseId, User user, UpdateExpenseRequest request) {
+
+        Expense expense = expenseRepository.findByIdAndUser(expenseId, user)
+                .orElseThrow(() ->
+                        new RuntimeException("Expense not found or access denied")
+                );
+
+        expense.setAmount(request.getAmount());
+        expense.setDescription(request.getDescription());
+        expense.setCategory(request.getCategory());
+        expense.setExpenseDate(request.getExpenseDate());
+
+        expenseRepository.save(expense);
+    }
+
 
 }
