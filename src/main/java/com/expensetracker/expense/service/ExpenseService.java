@@ -8,4 +8,6 @@ public interface ExpenseService {
     Expense saveExpense(Expense expense);
 
     List<Expense> getExpensesByUser(User user);
+
+    void deleteExpense(Long expenseId, User user);
 }

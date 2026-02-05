@@ -77,4 +77,20 @@ public class ExpenseController {
         return ResponseEntity.ok(response);
     }
 
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteExpense(@PathVariable Long id) {
+
+        // 1️⃣ Get logged-in user
+        String email = SecurityUtil.getCurrentUserEmail();
+
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2️⃣ Delete expense with ownership check
+        expenseService.deleteExpense(id, user);
+
+        return ResponseEntity.ok("Expense deleted successfully");
+    }
+
 }

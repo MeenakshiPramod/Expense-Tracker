@@ -24,4 +24,15 @@ public class ExpenseServiceImpl implements ExpenseService {
         return expenseRepository.findByUser(user);
     }
 
+    @Override
+    public void deleteExpense(Long expenseId, User user){
+
+        Expense expense = expenseRepository.findByIdAndUser(expenseId, user)
+                .orElseThrow(() ->
+                        new RuntimeException("Expense not found or access denied")
+                        );
+
+        expenseRepository.delete(expense);
+    }
+
 }
